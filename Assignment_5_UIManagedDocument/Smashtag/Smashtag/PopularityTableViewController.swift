@@ -29,16 +29,18 @@ fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
 }
 
 
-class PopularityTableViewController: CoreDataTableViewController {
+class PopularityTableViewController: CoreDataTableViewController /*UITableViewController, NSFetchedResultsControllerDelegate */{
 
     // MARK: Model
     
     var mention: String? { didSet { updateUI() } }
     var moc: NSManagedObjectContext? { didSet { updateUI() } }
-    
-    fileprivate func updateUI() {
+    var resultsController: NSFetchedResultsController<Mension>!
+
+    private func updateUI() {
         if let context = moc , mention?.characters.count > 0 {
-            let request = NSFetchRequest<Mension>(entityName: "Mension")
+     //       let request = NSFetchRequest<Mension>(entityName: "Mension")
+            let request: NSFetchRequest<Mension> = Mension.fetchRequest()
             request.predicate = NSPredicate(format: "term.term contains[c] %@ AND count > %@",
                                                                                 mention!, "1")
             request.sortDescriptors = [NSSortDescriptor(
@@ -53,13 +55,13 @@ class PopularityTableViewController: CoreDataTableViewController {
                     ascending: true,
                     selector: #selector(NSString.localizedCaseInsensitiveCompare(_:))
                 )]
-             let resultsController:NSFetchedResultsController<Mension>?  = NSFetchedResultsController(
+           resultsController = NSFetchedResultsController(
                 fetchRequest: request,
                 managedObjectContext: context,
                 sectionNameKeyPath: "type",
                 cacheName: nil
             )
-            fetchedResultsController =  resultsController as? NSFetchedResultsController<NSFetchRequestResult>? ?? nil
+             fetchedResultsController =  resultsController as? NSFetchedResultsController<NSFetchRequestResult>? ?? nil
         } else {
             fetchedResultsController = nil
         }
@@ -69,31 +71,43 @@ class PopularityTableViewController: CoreDataTableViewController {
         static let CellIdentifier = "PopularMentionsCell"
         static let SegueToMainTweetTableView = "ToMainTweetTableView"
     }
+    // MARK: UITableViewDataSource
     
-    override func tableView(_ tableView: UITableView,
-                            cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Storyboard.CellIdentifier,
-                                                 for: indexPath)
+    
+     override func tableView(_ tableView: UITableView,
+                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+     let cell = tableView.dequeueReusableCell(withIdentifier: Storyboard.CellIdentifier,
+                                                            for: indexPath)
         var keyword: String?
         var count: String?
-        
         if let mensionM = fetchedResultsController?.object(at: indexPath) as? Mension {
             mensionM.managedObjectContext?.performAndWait {  // asynchronous
                 keyword =  mensionM.keyword
-                count   =  mensionM.count.stringValue
+                count =  mensionM.count.stringValue
             }
             cell.textLabel?.text = keyword
             cell.detailTextLabel?.text = "tweets.count: " + (count ?? "-")
         }
-        return cell
-    }
+     return cell
+     }
     
-    @IBAction private func toRootViewController(_ sender: UIBarButtonItem) {
-        
-       _ =  navigationController?.popToRootViewController(animated: true)
+    // MARK: View Controller Lifecycle
+
+   override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if moc == nil {
+            UIManagedDocument.useDocument{ (document) in
+                    self.moc =  document.managedObjectContext
+            }
+        }
     }
 
-    
+    @IBAction fileprivate func toRootViewController(_ sender: UIBarButtonItem) {
+        
+       _ = navigationController?.popToRootViewController(animated: true)
+    }
+
+   
     // MARK: - Navigation
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
