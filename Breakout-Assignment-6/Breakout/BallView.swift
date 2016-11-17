@@ -8,7 +8,7 @@
 import UIKit
 
 class BallView: UIView {
-    fileprivate struct Constants {
+   private struct Constants {
         static let backgroundColor = UIColor.white
     }
     

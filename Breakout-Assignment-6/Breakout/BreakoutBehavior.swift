@@ -12,46 +12,49 @@ import UIKit
 
 class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     
-    var hitBreak : ((_ behavior: UICollisionBehavior, _ ball: BallView, _ brickIndex: Int)-> ())?
-    var leftPlayingField : ((BallView)-> ())?
+    var hitBreak : ((_ behavior: UICollisionBehavior, _ ball: BallView,
+                                                _ brickIndex: Int)-> ())?
+    var leftPlayingField : ((_ ball: BallView)-> ())?
     
-    var gravityOn: Bool = true
-    let gravity = UIGravityBehavior()
-    var gravityMagnitudeModifier:CGFloat = 0.0 {
+    // MARK: - GRAVITY
+    
+    var gravity = UIGravityBehavior()
+    var gravityMagnitudeModifier:CGFloat = 1.0 {
         didSet{
             gravity.magnitude = gravityMagnitudeModifier
-
         }
     }
-
-    // MARK: - COLLIDER    
+    
+    // MARK: - COLLIDER
+    
     private lazy var collider: UICollisionBehavior = {
-        let lazyCollider = UICollisionBehavior()
-        lazyCollider.translatesReferenceBoundsIntoBoundary = false
-        lazyCollider.collisionDelegate = self
-        lazyCollider.action = { [unowned self] in
+        let сollider = UICollisionBehavior()
+        сollider.translatesReferenceBoundsIntoBoundary = false
+        сollider.collisionDelegate = self
+        сollider.action = { [unowned self] in
             
             for ball in self.balls {
                 if !self.dynamicAnimator!.referenceView!.bounds.intersects(ball.frame){
-                     self.leftPlayingField?( ball as BallView)
+                    self.leftPlayingField?( ball as BallView)
                 }
                 
-                self.ballBehavior.limitLinearVelocity(Constants.Ball.MinVelocity,
-                                                 max: Constants.Ball.MaxVelocity,
-                                             forItem: ball as BallView)
+                self.ballBehavior.limitLinearVelocity(min: Constants.Ball.MinVelocity,
+                                                      max: Constants.Ball.MaxVelocity,
+                                                      forItem: ball as BallView)
             }
         }
-        return lazyCollider
+        return сollider
         }()
     
-    // MARK: - ballBehavior
-   lazy var ballBehavior: UIDynamicItemBehavior = {
-        let lazyBallBehavior = UIDynamicItemBehavior()
-        lazyBallBehavior.allowsRotation = false
-        lazyBallBehavior.elasticity = 1.0
-        lazyBallBehavior.friction = 0.0
-        lazyBallBehavior.resistance = 0.0
-        return lazyBallBehavior
+    // MARK: - BALLBehavior
+    
+   private lazy var ballBehavior: UIDynamicItemBehavior = {
+        let ballBehavior = UIDynamicItemBehavior()
+        ballBehavior.allowsRotation = false
+        ballBehavior.elasticity = 1.0
+        ballBehavior.friction = 0.0
+        ballBehavior.resistance = 0.0
+        return ballBehavior
         }()
     
     
@@ -68,19 +71,23 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     }
     
     // MARK: - BOUNDARIES
-    func addBoundary(_ path: UIBezierPath, named identifier: NSCopying) {
-        removeBoundary(identifier)
+    
+    func addBoundary(path: UIBezierPath, named identifier: NSCopying) {
+        removeBoundary(identifier: identifier)
         collider.addBoundary(withIdentifier: identifier, for: path)
     }
     
-    func removeBoundary (_ identifier: NSCopying) {
+    func removeBoundary (identifier: NSCopying) {
         collider.removeBoundary(withIdentifier: identifier)
     }
     
-     // MARK: - COLLISION BEHAVIOR
-    func collisionBehavior(_ behavior: UICollisionBehavior, beganContactFor item: UIDynamicItem,
-                                                 withBoundaryIdentifier boundaryId: NSCopying?,
-                                                                         at p: CGPoint) {
+     // MARK: - COLLISION BEHAVIOR Delegate
+    
+    func collisionBehavior(_ behavior: UICollisionBehavior,
+                 beganContactFor item: UIDynamicItem,
+    withBoundaryIdentifier boundaryId: NSCopying?,
+                                 at p: CGPoint) {
+        
         if let brickIndex = boundaryId as? Int {
             if let ball = item as? BallView {
                   self.hitBreak?(behavior, ball, brickIndex)
@@ -89,15 +96,16 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     }
     
     // MARK: - BALL
-    func addBall(_ ball: UIView) {
+    
+    func addBall(ball: UIView) {
         
         self.dynamicAnimator?.referenceView?.addSubview(ball)
-        if gravityOn == true { gravity.addItem(ball) }
+        gravity.addItem(ball)
         collider.addItem(ball)
         ballBehavior.addItem(ball)
     }
     
-    func removeBall(_ ball: UIView) {
+    func removeBall(ball: UIView) {
         gravity.removeItem(ball)
         collider.removeItem(ball)
         ballBehavior.removeItem(ball)
@@ -106,28 +114,32 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     
     func removeAllBalls(){
         for ball in balls {
-            removeBall(ball)
+            removeBall(ball: ball)
         }
     }
     
-    //  тормозим мячик
-    func stopBall(_ ball: UIView) -> CGPoint {
+    //  останавливаем мячик
+    func stopBall(ball: UIView) -> CGPoint {
         let linVeloc = ballBehavior.linearVelocity(for: ball)
-        ballBehavior.addLinearVelocity(CGPoint(x: -linVeloc.x, y: -linVeloc.y), for: ball)
+        ballBehavior.addLinearVelocity(CGPoint(x: -linVeloc.x, y: -linVeloc.y),
+                                                             for: ball)
         return linVeloc
     }
     
-    //  запускаем мячик после торможения
-    func startBall(_ ball: UIView, velocity: CGPoint) {
+    //  запускаем мячик после остановки
+    func reStartBall(ball: UIView, velocity: CGPoint) {
         ballBehavior.addLinearVelocity(velocity, for: ball)
     }
     
-    //запуск мячика push
-    func launchBall(_ ball: UIView, magnitude: CGFloat) {
+    //запуск мячика c помощью push
+    func launchBall(ball: UIView, magnitude: CGFloat) {
         let pushBehavior = UIPushBehavior(items: [ball], mode: .instantaneous)
         pushBehavior.magnitude = magnitude
-        let angle = CGFloat(1.25 * M_PI + (0.5 * M_PI) * (Double(arc4random()) / Double(UINT32_MAX)))
+        
+        let angle = CGFloat(1.25 * M_PI +
+                     (0.5 * M_PI) * (Double(arc4random()) / Double(UINT32_MAX)))
         pushBehavior.angle = angle
+        
         pushBehavior.action = { [weak pushBehavior] in
             if !pushBehavior!.active { self.removeChildBehavior(pushBehavior!) }
         }
@@ -135,69 +147,17 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
         addChildBehavior(pushBehavior)
     }
     
-    func linearVelocityBall (_ item: UIDynamicItem) -> CGPoint {
-        return ballBehavior.linearVelocity(for: item)}
- 
+    func linearVelocity (item: UIDynamicItem) -> CGPoint {
+        return ballBehavior.linearVelocity (for: item)}
+    
+    // MARK: - CONSTANTS
+
+    
    private struct Constants {
         struct Ball {
             static let MinVelocity = CGFloat(100.0)
             static let MaxVelocity = CGFloat(1400.0)
         }
     }
-
-}
-// MARK: - LINEAR VELOCITY
-
-
-private extension UIDynamicItemBehavior {
-    
-    func limitLinearVelocity(_ min: CGFloat, max: CGFloat, forItem item: UIDynamicItem) {
-        assert(min < max, "min < max")
-        let itemVelocity = linearVelocity(for: item)
-        (item as! BallView).backgroundColor = UIColor.white
-        switch itemVelocity.magnitude {
-        case  let x where x < CGFloat(600.0) :
-            (item as! BallView).backgroundColor = UIColor.yellow
-        case  let x where x < 800 && x >= 600 :
-            (item as! BallView).backgroundColor = UIColor.orange
-        case  let x where x  < 1000 && x >= 800 :
-            (item as! BallView).backgroundColor = UIColor.red
-        case  let x where  x >= 1000 :
-            (item as! BallView).backgroundColor = UIColor.magenta
-        default:
-            (item as! BallView).backgroundColor = UIColor.white
-        }
-        if itemVelocity.magnitude <= 0.0 { return }
-        if itemVelocity.magnitude < min {
-            let deltaVelocity = min/itemVelocity.magnitude * itemVelocity - itemVelocity
-            //                println ("magnitude = \(itemVelocity.magnitude) delta = \(deltaVelocity)")
-            addLinearVelocity(deltaVelocity, for: item)
-        }
-        if itemVelocity.magnitude > max  {
-            //            println(itemVelocity.magnitude )
-            (item as! BallView).backgroundColor = UIColor.red
-            let deltaVelocity = max/itemVelocity.magnitude * itemVelocity - itemVelocity
-            addLinearVelocity(deltaVelocity, for: item)
-        }
-    }
 }
 
-private extension CGPoint {
-    var angle: CGFloat {
-        get { return CGFloat(atan2(self.x, self.y)) }
-    }
-    var magnitude: CGFloat {
-        get { return CGFloat(sqrt(self.x*self.x + self.y*self.y)) }
-    }
-}
-prefix func -(left: CGPoint) -> CGPoint {
-    return CGPoint(x: -left.x, y: -left.y)
-}
-
-func -(left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x-right.x, y: left.y-right.y)
-}
-
-func *(left: CGFloat, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left*right.x, y: left*right.y)
-}

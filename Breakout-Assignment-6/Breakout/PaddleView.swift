@@ -8,7 +8,7 @@
 import UIKit
 
 class PaddleView: UIView {
-    fileprivate struct Constants {
+    private struct Constants {
         static let backgroundColor = UIColor.white
         static let cornerRadius: CGFloat = 5.0
     }

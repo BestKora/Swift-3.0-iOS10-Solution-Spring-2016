@@ -10,7 +10,7 @@ import UIKit
 import CoreMotion
 
 class BreakoutView: UIView {
-
+    
     // MARK: Public API
     
     var animating: Bool = false {
@@ -29,16 +29,19 @@ class BreakoutView: UIView {
             updateRealGravity()
         }
     }
-
-     var behavior = BreakoutBehavior()
-     var bricks =  [Int:BrickView]()
-     var balls: [BallView]  {return self.behavior.balls}
-     var gravityMagnitudeModifier:CGFloat = 0.0 {
+    
+    var behavior = BreakoutBehavior()
+    
+    var bricks =  [Int:BrickView]()
+    
+    var balls: [BallView]  {return self.behavior.balls}
+    
+    var gravityMagnitudeModifier:CGFloat = 0.0 {
         didSet {
             behavior.gravityMagnitudeModifier = gravityMagnitudeModifier
         }
     }
-
+    
     var levelInt: Int?  {
         didSet {
             if let levelNew = levelInt {
@@ -46,17 +49,21 @@ class BreakoutView: UIView {
             }
         }
     }
-
+    
     var paddleWidthPercentage :Int = Constants.PaddleWidthPercentage {
         didSet{
             if  paddleWidthPercentage == oldValue{ return}
             resetPaddleInCenter()
         }
     }
-    
+ 
     var launchSpeedModifier: Float = 0.0
     
+  
     // MARK: Private Implementation
+    
+    private lazy var animator: UIDynamicAnimator =
+        { UIDynamicAnimator(referenceView: self) }()
     
     private var level :[[Int]]? {
         didSet {
@@ -64,23 +71,24 @@ class BreakoutView: UIView {
         }
     }
 
-    private lazy var animator: UIDynamicAnimator = {
-        UIDynamicAnimator(referenceView: self)
-        }()
-    
-   private lazy var paddle: PaddleView = {
+    private lazy var paddle: PaddleView = {
         let paddle = PaddleView(frame: CGRect(origin: CGPoint.zero,
-            size: self.paddleSize))
+                                              size: self.paddleSize))
         self.addSubview(paddle)
         return paddle
-        }()
+    }()
     
+    private var paddleSize : CGSize {
+        let width = self.bounds.size.width / 100.0 * CGFloat(paddleWidthPercentage)
+        return CGSize(width: width, height: CGFloat(Constants.PaddleHeight))
+    }
     
     private var launchSpeed:CGFloat {
-        get {return Constants.minLaunchSpeed +
-            (Constants.maxLaunchSpeed - Constants.minLaunchSpeed) * CGFloat(launchSpeedModifier)}
+        get {return Constants.minLaunchSpeed + (Constants.maxLaunchSpeed -
+            Constants.minLaunchSpeed) *
+            CGFloat(launchSpeedModifier)}
     }
-
+ 
     private var columns: Int?{
         get {return level?[0].count}
     }
@@ -89,11 +97,13 @@ class BreakoutView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        
         resetPaddlePosition()
+        
         // Помещаем balls обратно в breakoutView после автовращения
         for ball in balls {
             if !self.bounds.contains(ball.frame) {
-                placeBallBack(ball)
+                placeBallBack(ball: ball)
             }
         }
     }
@@ -101,62 +111,65 @@ class BreakoutView: UIView {
     func resetLayout() {
         var gameBounds = self.bounds
         gameBounds.size.height *= 2.0
-        behavior.addBoundary(UIBezierPath(rect: gameBounds), named: Constants.selfBoundaryId as NSCopying)
+        behavior.addBoundary(path: UIBezierPath(rect: gameBounds),
+                             named: Constants.selfBoundaryId as NSCopying)
         resetPaddleInCenter()
         resetBricks()
     }
     
     func reset(){
         removeBricks()
-        removeAllBalls()
+        removeAllBallsFromGame()
         createBricks()
         resetPaddleInCenter()
     }
-    
+
     // MARK: - BALLS
     
-    func addBall() {
-        let ball = BallView(frame: CGRect(origin: CGPoint(x: paddle.center.x,
-                                y: paddle.frame.minY - Constants.BallSize.height),
-                             size: Constants.BallSize))
-        self.behavior.addBall(ball)
-        behavior.launchBall(ball, magnitude: launchSpeed)
+    func addBallToGame() {
+        let pointOrigin = CGPoint(x: paddle.center.x,
+                            y: paddle.frame.minY - Constants.BallSize.height)
+        let ball = BallView(frame: CGRect(origin: pointOrigin,
+                                            size: Constants.BallSize))
+        behavior.addBall(ball: ball)
+        behavior.launchBall(ball: ball, magnitude: launchSpeed)
     }
     
-    func removeBall(_ ball: BallView){
-        self.behavior.removeBall(ball)
+    func removeBallFromGame(ball: BallView){
+        behavior.removeBall(ball: ball)
     }
     
-    func removeAllBalls(){
+    func removeAllBallsFromGame(){
         behavior.removeAllBalls()
     }
     
     func pushBalls(){
         for ball in balls {
-            behavior.launchBall(ball, magnitude: Constants.pushSpeed)
+            behavior.launchBall(ball: ball, magnitude: Constants.pushSpeed)
         }
     }
     
-    private func placeBallBack(_ ball: UIView) {
+    private func placeBallBack(ball: UIView) {
         ball.center = CGPoint(x: self.paddle.center.x,
                               y: self.paddle.center.y - paddle.bounds.height * 3)
         animator.updateItem(usingCurrentState: ball)
     }
     
-    var ballVelocity: [CGPoint]
+    var ballsVelocities: [CGPoint]
         {
         get {
-            var ballVelocityLoc = [CGPoint]()
+            var ballsVelocitiesLoc = [CGPoint]()
             for ball in balls {
-                ballVelocityLoc.append(behavior.stopBall(ball))
+                ballsVelocitiesLoc.append(behavior.stopBall(ball: ball))
             }
-            return ballVelocityLoc
+            return ballsVelocitiesLoc
         }
         set {
-            var ballVelocityLoc = newValue as [CGPoint]
+            var ballsVelocitiesLoc = newValue as [CGPoint]
             if !newValue.isEmpty {
                 for i in 0..<balls.count {
-                    behavior.startBall(behavior.balls[i], velocity: ballVelocityLoc[i])
+                    behavior.reStartBall(ball: behavior.balls[i],
+                                     velocity: ballsVelocitiesLoc[i])
                 }
             }
         }
@@ -165,12 +178,12 @@ class BreakoutView: UIView {
     // MARK: - BRICKS
     
     private func createBricks() {
-        if let arrangement = level {
-            
-            if arrangement.count == 0 { return }    // нет строк
-            if arrangement[0].count == 0 { return } // нет столбцов
-            
-            let rows = arrangement.count
+        guard let arrangement = level,
+                  arrangement.count > 0,    // есть строки
+                  arrangement[0].count > 0  // есть столбцы
+        else {return}
+
+        let rows = arrangement.count
             let columns = arrangement[0].count
             let width = (self.bounds.size.width -
                              2 * Constants.BrickSpacing) / CGFloat(columns)
@@ -185,13 +198,12 @@ class BreakoutView: UIView {
                             CGFloat(row) * Constants.BrickHeight +
                             CGFloat(row) * Constants.BrickSpacing * 2
                     let hue = CGFloat(row) / CGFloat(rows)
-                    createBrick(width, x: x, y: y, hue: hue)
+                    createNewBrick(width: width, x: x, y: y, hue: hue)
                 }
             }
-        }
     }
     
-    private func createBrick(_ width: CGFloat, x: CGFloat, y: CGFloat, hue: CGFloat) {
+    private func createNewBrick(width: CGFloat, x: CGFloat, y: CGFloat, hue: CGFloat) {
         var frame = CGRect(origin: CGPoint(x: x, y: y),
                              size: CGSize(width: width, height: Constants.BrickHeight))
         frame = frame.insetBy(dx: Constants.BrickSpacing, dy: 0)
@@ -200,14 +212,14 @@ class BreakoutView: UIView {
         bricks[bricks.count] = brick
         
         addSubview(brick)
-        behavior.addBoundary( UIBezierPath(roundedRect: brick.frame,
+        behavior.addBoundary( path: UIBezierPath(roundedRect: brick.frame,
                                           cornerRadius: brick.layer.cornerRadius),
                               named: (bricks.count - 1)  as NSCopying)
     }
     
     
-  func removeBrick(_ brickIndex: Int) {
-        behavior.removeBoundary(brickIndex as NSCopying)
+  func removeBrickFromGame(brickIndex: Int) {
+        behavior.removeBoundary(identifier: brickIndex as NSCopying)
         
         if let brick = bricks[brickIndex] {
             UIView.transition(with: brick, duration: 0.3,
@@ -226,8 +238,8 @@ class BreakoutView: UIView {
         }
     }
     
-    private func removeBrickWithoutAnimation(_ brickIndex: Int) {
-        behavior.removeBoundary(brickIndex as NSCopying)
+    private func removeBrick(brickIndex: Int) {
+        behavior.removeBoundary(identifier: brickIndex as NSCopying)
         
         if let brick = bricks[brickIndex] {
             brick.removeFromSuperview()
@@ -242,7 +254,7 @@ class BreakoutView: UIView {
         for brick in bricks {
             let index = brick.0
             if  !activeBricksSet.contains(index) {
-                removeBrickWithoutAnimation(brick.0)
+                removeBrick(brickIndex: brick.0)
             }
         }
     }
@@ -250,29 +262,41 @@ class BreakoutView: UIView {
     private func removeBricks() {
         if bricks.count == 0 {return}
         for brick in bricks {
-            removeBrickWithoutAnimation(brick.0)
+            removeBrick(brickIndex: brick.0)
         }
     }
     
     // MARK: - PADDLE
     
-    private var paddleSize : CGSize {
-        let width = self.bounds.size.width / 100.0 * CGFloat(paddleWidthPercentage)
-        return CGSize(width: width, height: CGFloat(Constants.PaddleHeight))
+    //---- ОБРАБОТКА ЖЕСТА Pan - движение "ракетки"
+    
+    func panPaddle(_ gesture: UIPanGestureRecognizer) {
+        let gesturePoint = gesture.translation(in: self)
+        switch gesture.state {
+        case .ended: fallthrough
+        case .changed:
+            translatePaddle(translation: gesturePoint)
+            gesture.setTranslation(CGPoint.zero, in:self)
+        default: break
+        }
     }
     
-    private func translatePaddle(_ translation: CGPoint) {
+    private func translatePaddle(translation: CGPoint) {
         var newFrame = paddle.frame
-        newFrame.origin.x = max( min(newFrame.origin.x + translation.x, self.bounds.maxX - paddle.bounds.size.width), 0.0)
+        newFrame.origin.x = max( min(newFrame.origin.x + translation.x,
+                                self.bounds.maxX - paddle.bounds.size.width), 0.0)
         for ball in balls {
             if newFrame.contains(ball.frame) {
                 return
             }
         }
         paddle.frame = newFrame;
-        behavior.addBoundary(UIBezierPath(ovalIn: paddle.frame), named: Constants.paddleBoundaryId as NSCopying)
+        behavior.addBoundary(path: UIBezierPath(ovalIn: paddle.frame),
+                             named: Constants.paddleBoundaryId as NSCopying)
     }
     
+    // ----------------------------------------------
+
     private func resetPaddleInCenter(){
         paddle.center = CGPoint.zero
         resetPaddlePosition()
@@ -282,38 +306,25 @@ class BreakoutView: UIView {
         paddle.frame.size = paddleSize
         if !self.bounds.contains(paddle.frame) {
             paddle.center = CGPoint(x: self.bounds.midX,
-                y: self.bounds.maxY - paddle.bounds.height - Constants.PaddleBottomMargin)
+             y: self.bounds.maxY - paddle.bounds.height - Constants.PaddleBottomMargin)
         } else {
             paddle.center = CGPoint(x: paddle.center.x,
-                y: self.bounds.maxY - paddle.bounds.height - Constants.PaddleBottomMargin)
+             y: self.bounds.maxY - paddle.bounds.height - Constants.PaddleBottomMargin)
         }
-        behavior.addBoundary(UIBezierPath(ovalIn: paddle.frame),
+        behavior.addBoundary(path: UIBezierPath(ovalIn: paddle.frame),
                              named: Constants.paddleBoundaryId as NSCopying)
     }
     
-    //---- ОБРАБОТКА ЖЕСТОВ
-    
-    func panPaddle(_ gesture: UIPanGestureRecognizer) {
-        let gesturePoint = gesture.translation(in: self)
-        switch gesture.state {
-        case .ended: fallthrough
-        case .changed:
-           translatePaddle(gesturePoint)
-            gesture.setTranslation(CGPoint.zero, in:self)
-        default: break
-        }
-    }
-    
-   //-------------------
+    //-----------------------------------------------------
     struct Constants {
         static let selfBoundaryId = "selfBoundary"
         static let paddleBoundaryId = "paddleBoundary"
-      
+        
         static let BallSize = CGSize(width: 20, height: 20)
         static let BallSpacing: CGFloat = 3
         
         static let PaddleBottomMargin: CGFloat = 10.0
-        static let PaddleHeight: Int = 15
+        static let PaddleHeight: Int = 19
         static let PaddleColor = UIColor.white
         static let PaddleWidthPercentage:Int = 33
         
@@ -326,8 +337,9 @@ class BreakoutView: UIView {
         static let minLaunchSpeed = CGFloat(0.2)
         static let maxLaunchSpeed = CGFloat(0.5)
         static let pushSpeed = CGFloat(0.15)
-        
     }
+    //-------------------------------------------------------
+    
     // MARK: Core Motion
     
     private let motionManager = CMMotionManager()

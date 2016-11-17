@@ -10,24 +10,24 @@ import Foundation
 class Settings {
    struct Defaults {
         static let Level = 2
-        static let BallSpeedModifier = Float(0.05)
         static let MaxBalls: Int = 3
         static let PaddleWidth = PaddleWidthPercentage.Large
+        static let BallSpeedModifier = Float(0.05)
         static let RealGravity = false
         static let GravityMagnitudeModifier = Float(0.00)
     }
     
-    fileprivate struct Keys {
+    private struct Keys {
         static let Level = "Settings.Level"
-        static let BallSpeedModifier = "Settings.BallSpeedModifier"
         static let MaxBalls = "Settings.BallCount"
         static let PaddleWidth = "Settings.PaddleWidth"
+        static let BallSpeedModifier = "Settings.BallSpeedModifier"
         static let RealGravity = "Settings.RealGravity"
         static let GravityMagnitudeModifier = "Settings.GravityMagnitudeModifier"
         
     }
     
-    fileprivate let userDefaults = UserDefaults.standard
+    private let userDefaults = UserDefaults.standard
     
     // gameplay settings
     
@@ -37,7 +37,8 @@ class Settings {
     }
     
     var ballSpeedModifier: Float {
-        get { return userDefaults.object(forKey: Keys.BallSpeedModifier) as? Float ?? Defaults.BallSpeedModifier}
+        get { return userDefaults.object(forKey: Keys.BallSpeedModifier) as? Float ??
+                                                                Defaults.BallSpeedModifier}
         set { userDefaults.set(newValue, forKey: Keys.BallSpeedModifier) }
     }
     
@@ -62,7 +63,8 @@ class Settings {
     
     var gravityMagnitudeModifier: Float
         {
-        get { return userDefaults.object(forKey: Keys.GravityMagnitudeModifier) as? Float ?? Defaults.GravityMagnitudeModifier}
+        get { return userDefaults.object(forKey: Keys.GravityMagnitudeModifier) as? Float ??
+                                                                Defaults.GravityMagnitudeModifier}
         set { userDefaults.set(newValue, forKey: Keys.GravityMagnitudeModifier) }
     }
 

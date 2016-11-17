@@ -2,9 +2,6 @@
 //  BreakoutViewController.swift
 //  Breakout
 //
-//  Created by Tatiana Kornilova on 9/4/15.
-//  Copyright (c) 2015 Tatiana Kornilova. All rights reserved.
-//
 
 import UIKit
 import CoreMotion
@@ -13,8 +10,12 @@ class BreakoutViewController: UIViewController {
 
     @IBOutlet var breakoutView: BreakoutView!  {
         didSet {
-            breakoutView.addGestureRecognizer( UITapGestureRecognizer(target: self, action: #selector(BreakoutViewController.launchBall(_:))))
-            breakoutView.addGestureRecognizer(UIPanGestureRecognizer(target: breakoutView, action: #selector(BreakoutView.panPaddle(_:))))
+            breakoutView.addGestureRecognizer( UITapGestureRecognizer(target:
+                self, action: #selector(BreakoutViewController.launchBall(_:))))
+            
+            breakoutView.addGestureRecognizer(UIPanGestureRecognizer(target:
+                breakoutView, action: #selector(BreakoutView.panPaddle(_:))))
+            
             breakoutView.behavior.hitBreak =  self.ballHitBrick
             breakoutView.behavior.leftPlayingField =  self.ballLeftPlayingField
         }
@@ -36,11 +37,29 @@ class BreakoutViewController: UIViewController {
         didSet{ scoreLabel?.text = "\(score)" }
     }
 
-    private var ballVelocity = [CGPoint]()
+    private var ballsVelocities = [CGPoint]()
     private var gameViewSizeChanged = true
     private let settings = Settings()
     
     // MARK: - LIFE CYCLE
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        breakoutView.animating = true
+        
+        loadSettings()
+        
+        //  Restart мячиков при возвращени на закладку Breakout игры
+        breakoutView.ballsVelocities = ballsVelocities
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+          breakoutView.animating = false
+        
+        // Останавливаем мячики
+         ballsVelocities = breakoutView.ballsVelocities
+    }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -51,44 +70,38 @@ class BreakoutViewController: UIViewController {
             breakoutView.resetLayout()
         }
     }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        breakoutView.animating = true
-        loadSettings()
-        
-        //  Restart мячиков при возвращени на закладку Breakout игры
-        breakoutView.ballVelocity = ballVelocity
-        
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-          breakoutView.animating = false
-        
-        // Останавливаем мячики
-         ballVelocity = breakoutView.ballVelocity
-    }
+
     
     override func viewWillTransition(to size: CGSize,
                             with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         gameViewSizeChanged = true
     }
-
+    
     // MARK: - GESTURES
     
-    func launchBall(_ gesture: UITapGestureRecognizer){
+ // один мяч в игре
+     func launchBall(_ gesture: UITapGestureRecognizer){
         if gesture.state == .ended {
             if breakoutView.balls.count > 0 {
-                     breakoutView.pushBalls()
+                breakoutView.pushBalls()
             } else if ballsUsed < maxBalls {
                 ballsUsed += 1
-                breakoutView.addBall()
+                breakoutView.addBallToGame()
             }
         }
     }
-    
+ 
+ /*    // много мячиков в игре
+    func launchBall(_ gesture: UITapGestureRecognizer){
+        if gesture.state == .ended {
+            if ballsUsed < maxBalls {
+                ballsUsed += 1
+                breakoutView.addBallToGame()
+            }
+        }
+    }*/
+
     // MARK: - LOAD SEIITINGS
     private func loadSettings() {
         
@@ -100,10 +113,12 @@ class BreakoutViewController: UIViewController {
         breakoutView.launchSpeedModifier = settings.ballSpeedModifier
         breakoutView.realGravity = settings.realGravity
         breakoutView.gravityMagnitudeModifier = CGFloat(settings.gravityMagnitudeModifier)
-        gravityLabel?.text = (formatter.string(from: NSNumber(value: settings.gravityMagnitudeModifier)) ?? "0.00") + " g"
+        gravityLabel?.text = (formatter.string(from:
+                     NSNumber(value: settings.gravityMagnitudeModifier)) ?? "0.00") + " g"
     }
     
     // MARK: - RESET GAME
+    
     private func resetGame()
     {
         breakoutView.reset()
@@ -112,26 +127,30 @@ class BreakoutViewController: UIViewController {
     }
     
     // MARK: - Hit BRICK
-    func ballHitBrick(_ behavior: UICollisionBehavior, ball: BallView, brickIndex: Int) {
-        breakoutView.removeBrick(brickIndex)
+    
+    func ballHitBrick(_ behavior: UICollisionBehavior, ball: BallView,
+                                                 brickIndex: Int) {
+        breakoutView.removeBrickFromGame(brickIndex: brickIndex)
         score += 1
-        if breakoutView.bricks.count == 0 {
-            breakoutView.removeAllBalls()
-            showGameEndedAlert(true, message: "ВЫИГРЫШ!")
+        if breakoutView.bricks.count == 0 { // последний "кирпич" покинул игровое поле
+            breakoutView.removeAllBallsFromGame()
+            showGameEndedAlert(playerWon: true, message: "ВЫИГРЫШ!")
         }
     }
     
     // MARK: - Ball LEFT Plaing FIELD
+    
     func ballLeftPlayingField(_ ball: BallView)
     {
-        if(ballsUsed == maxBalls) { // the last ball just left the playing field
-            showGameEndedAlert(false, message: "Нет мячиков!")
+        if(ballsUsed == maxBalls && breakoutView.balls.count == 1) { // последний "мячик" покинул игровое поле
+            showGameEndedAlert(playerWon: false, message: "Нет мячиков!")
         }
-        breakoutView.removeBall(ball)
+        breakoutView.removeBallFromGame(ball: ball)
     }
     
     // MARK: - ALERT
-    private func showGameEndedAlert(_ playerWon: Bool, message: String) {
+    
+    private func showGameEndedAlert(playerWon: Bool, message: String) {
         let title = playerWon ? Const.congratulationsTitle : Const.gameOverTitle
         let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.alert)
         
