@@ -9,26 +9,6 @@
 import UIKit
 import Twitter
 import CoreData
-fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l < r
-  case (nil, _?):
-    return true
-  default:
-    return false
-  }
-}
-
-fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l > r
-  default:
-    return rhs < lhs
-  }
-}
-
 
 class TweetTableViewController: UITableViewController, UITextFieldDelegate
 {
@@ -223,7 +203,7 @@ class TweetTableViewController: UITableViewController, UITextFieldDelegate
                                           target: self,
                                           action: #selector(TweetTableViewController.showImages(_:)))
         navigationItem.rightBarButtonItems = [imageButton]
-        if navigationController?.viewControllers.count > 1 {
+        if let navCont = navigationController, navCont.viewControllers.count > 1 {
             
             let stopBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop,
                                                     target: self,

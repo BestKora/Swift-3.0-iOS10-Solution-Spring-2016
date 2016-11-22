@@ -34,7 +34,7 @@ class GraphViewController: UIViewController {
     }
     
     let defaults = UserDefaults.standard
-    fileprivate struct Keys {
+    private struct Keys {
         static let Scale = "GraphViewController.Scale"
         static let Origin = "GraphViewController.Origin"
     }

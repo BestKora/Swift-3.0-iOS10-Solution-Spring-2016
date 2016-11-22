@@ -12,8 +12,7 @@ import UIKit
 
 class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     
-    var hitBreak : ((_ behavior: UICollisionBehavior, _ ball: BallView,
-                                                _ brickIndex: Int)-> ())?
+    var hitBreak : ((_ behavior: UICollisionBehavior, _ ball: BallView, _ brickIndex: Int)-> ())?
     var leftPlayingField : ((_ ball: BallView)-> ())?
     
     // MARK: - GRAVITY
@@ -63,6 +62,7 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
     }
     
     // MARK: - INIT
+    
     override init() {
         super.init()
         addChildBehavior(gravity)
@@ -151,7 +151,6 @@ class BreakoutBehavior: UIDynamicBehavior, UICollisionBehaviorDelegate {
         return ballBehavior.linearVelocity (for: item)}
     
     // MARK: - CONSTANTS
-
     
    private struct Constants {
         struct Ball {

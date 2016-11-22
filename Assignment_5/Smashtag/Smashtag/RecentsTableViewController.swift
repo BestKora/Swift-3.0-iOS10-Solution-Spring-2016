@@ -31,10 +31,10 @@ class RecentsTableViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    fileprivate struct Storyboard {
-        fileprivate static let RecentCell = "Recent Cell"
-        fileprivate static let TweetsSegue = "Show Tweets from Recent"
-        fileprivate static let PopularSegueIdentifier = "ShowPopularMensions"
+    private struct Storyboard {
+        static let RecentCell = "Recent Cell"
+        static let TweetsSegue = "Show Tweets from Recent"
+        static let PopularSegueIdentifier = "ShowPopularMensions"
     }
     
     // MARK: - UITableViewDataSource
@@ -51,7 +51,7 @@ class RecentsTableViewController: UITableViewController {
              cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Storyboard.RecentCell,
                                           for: indexPath) as UITableViewCell
-        cell.textLabel?.text = recentSearches[(indexPath as NSIndexPath).row]
+        cell.textLabel?.text = recentSearches[indexPath.row]
         return cell
     }
     
@@ -63,7 +63,7 @@ class RecentsTableViewController: UITableViewController {
         
         if editingStyle == .delete {
             // уничтожаем строку из data source
-            let term = recentSearches[(indexPath as NSIndexPath).row]
+            let term = recentSearches[indexPath.row]
             moc.perform({ 
                 let request: NSFetchRequest<SearchTerm> = SearchTerm.fetchRequest()
                 request.predicate = NSPredicate(format: "term = %@", term)
@@ -72,7 +72,7 @@ class RecentsTableViewController: UITableViewController {
                     self.moc.delete(searchTerm)
                     do {
                         try self.moc.save()
-                        RecentSearches.removeAtIndex((indexPath as NSIndexPath).row)
+                        RecentSearches.removeAtIndex(indexPath.row)
                         tableView.deleteRows(at: [indexPath], with: .fade)
                     } catch {
                         fatalError("Ошибка сохранения main managed object context! \(error)")

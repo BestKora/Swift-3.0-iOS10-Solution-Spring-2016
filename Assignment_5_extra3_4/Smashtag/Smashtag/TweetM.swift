@@ -97,7 +97,7 @@ public class TweetM: NSManagedObject {
     
     // MARK: Constants
     
-    fileprivate struct Constants {
+    private struct Constants {
         static let TimeToRemoveOldTweets  = -60*60*24*7
     }
     

@@ -9,27 +9,6 @@
 import UIKit
 import CoreData
 
-fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l < r
-  case (nil, _?):
-    return true
-  default:
-    return false
-  }
-}
-
-fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l > r
-  default:
-    return rhs < lhs
-  }
-}
-
-
 class PopularityTableViewController: CoreDataTableViewController {
 
     // MARK: Model
@@ -38,7 +17,7 @@ class PopularityTableViewController: CoreDataTableViewController {
     var moc: NSManagedObjectContext? { didSet { updateUI() } }
     
     private func updateUI() {
-        if let context = moc ,searchText?.characters.count > 0 {
+        if let context = moc, let search = searchText, search.characters.count > 0 {
             let request: NSFetchRequest<Mension> = Mension.fetchRequest()
             request.predicate = NSPredicate(format:
                 "term.term contains[c] %@ AND count > %@", searchText!, "1")
@@ -93,7 +72,7 @@ class PopularityTableViewController: CoreDataTableViewController {
      }
     
     
-    @IBAction fileprivate func toRootViewController(_ sender: UIBarButtonItem) {
+    @IBAction private func toRootViewController(_ sender: UIBarButtonItem) {
         
        _ = navigationController?.popToRootViewController(animated: true)
     }

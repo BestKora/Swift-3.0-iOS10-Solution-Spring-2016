@@ -103,6 +103,7 @@ class BreakoutViewController: UIViewController {
     }*/
 
     // MARK: - LOAD SEIITINGS
+    
     private func loadSettings() {
         
         maxBalls = settings.maxBalls

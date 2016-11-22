@@ -31,11 +31,8 @@ class BreakoutView: UIView {
     }
     
     var behavior = BreakoutBehavior()
-    
     var bricks =  [Int:BrickView]()
-    
     var balls: [BallView]  {return self.behavior.balls}
-    
     var gravityMagnitudeModifier:CGFloat = 0.0 {
         didSet {
             behavior.gravityMagnitudeModifier = gravityMagnitudeModifier
@@ -179,28 +176,27 @@ class BreakoutView: UIView {
     
     private func createBricks() {
         guard let arrangement = level,
-                  arrangement.count > 0,    // есть строки
-                  arrangement[0].count > 0  // есть столбцы
-        else {return}
-
+            arrangement.count > 0,    // есть строки
+            arrangement[0].count > 0  // есть столбцы
+            else {return}
+        
         let rows = arrangement.count
-            let columns = arrangement[0].count
-            let width = (self.bounds.size.width -
-                             2 * Constants.BrickSpacing) / CGFloat(columns)
-            
-            for row in 0 ..< rows {
-                let columns = arrangement[row].count
-                for column in 0 ..< columns {
-                    if arrangement[row][column] == 0 { continue }
-                    
-                    let x = Constants.BrickSpacing + CGFloat(column) * width
-                    let y = Constants.BricksTopSpacing +
-                            CGFloat(row) * Constants.BrickHeight +
-                            CGFloat(row) * Constants.BrickSpacing * 2
-                    let hue = CGFloat(row) / CGFloat(rows)
-                    createNewBrick(width: width, x: x, y: y, hue: hue)
-                }
+        let columns = arrangement[0].count
+        let width = (self.bounds.size.width - 2 * Constants.BrickSpacing) / CGFloat(columns)
+        
+        for row in 0 ..< rows {
+            let columns = arrangement[row].count
+            for column in 0 ..< columns {
+                if arrangement[row][column] == 0 { continue }
+                
+                let x = Constants.BrickSpacing + CGFloat(column) * width
+                let y = Constants.BricksTopSpacing +
+                    CGFloat(row) * Constants.BrickHeight +
+                    CGFloat(row) * Constants.BrickSpacing * 2
+                let hue = CGFloat(row) / CGFloat(rows)
+                createNewBrick(width: width, x: x, y: y, hue: hue)
             }
+        }
     }
     
     private func createNewBrick(width: CGFloat, x: CGFloat, y: CGFloat, hue: CGFloat) {

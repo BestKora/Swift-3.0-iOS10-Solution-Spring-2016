@@ -8,26 +8,6 @@
 
 import Foundation
 import UIKit
-fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l < r
-  case (nil, _?):
-    return true
-  default:
-    return false
-  }
-}
-
-fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l > r
-  default:
-    return rhs < lhs
-  }
-}
-
 
 @objc protocol CHTCollectionViewDelegateWaterfallLayout: UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -231,7 +211,7 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
                 let yOffset = (self.columnHeights.object(at: columnIndex) as AnyObject).doubleValue
                 let itemSize = self.delegate?.collectionView(self.collectionView!, layout: self, sizeForItemAtIndexPath: indexPath)
                 var itemHeight : CGFloat = 0.0
-                if itemSize?.height > 0 && itemSize?.width > 0 {
+                if let size = itemSize, size.height > 0 && size.width > 0 {
                     itemHeight = floor(itemSize!.height*itemWidth/itemSize!.width)
                 }
                 
@@ -293,22 +273,22 @@ class CHTCollectionViewWaterfallLayout : UICollectionViewLayout{
     }
     
     override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-        if (indexPath as NSIndexPath).section >= self.sectionItemAttributes.count{
+        if indexPath.section >= self.sectionItemAttributes.count{
             return nil
         }
-        if (indexPath as NSIndexPath).item >= (self.sectionItemAttributes.object(at: (indexPath as NSIndexPath).section) as AnyObject).count{
+        if indexPath.item >= (self.sectionItemAttributes.object(at: indexPath.section) as AnyObject).count{
             return nil;
         }
-        let list = self.sectionItemAttributes.object(at: (indexPath as NSIndexPath).section) as! NSArray
-        return list.object(at: (indexPath as NSIndexPath).item) as? UICollectionViewLayoutAttributes
+        let list = self.sectionItemAttributes.object(at: indexPath.section) as! NSArray
+        return list.object(at: indexPath.item) as? UICollectionViewLayoutAttributes
     }
     
     override func layoutAttributesForSupplementaryView(ofKind elementKind: String, at indexPath: IndexPath) -> UICollectionViewLayoutAttributes{
         var attribute = UICollectionViewLayoutAttributes()
         if elementKind == CHTCollectionElementKindSectionHeader{
-            attribute = self.headersAttributes.object(forKey: (indexPath as NSIndexPath).section) as! UICollectionViewLayoutAttributes
+            attribute = self.headersAttributes.object(forKey: indexPath.section) as! UICollectionViewLayoutAttributes
         } else if elementKind == CHTCollectionElementKindSectionFooter{
-            attribute = self.footersAttributes.object(forKey: (indexPath as NSIndexPath).section) as! UICollectionViewLayoutAttributes
+            attribute = self.footersAttributes.object(forKey: indexPath.section) as! UICollectionViewLayoutAttributes
         }
         return attribute
     }

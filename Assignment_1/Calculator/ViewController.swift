@@ -10,14 +10,14 @@ import UIKit
 
 class ViewController: UIViewController {
     @IBOutlet weak var history: UILabel!
-    @IBOutlet fileprivate weak var display: UILabel!
+    @IBOutlet private weak var display: UILabel!
     @IBOutlet weak var tochka: UIButton!{
         didSet {
             tochka.setTitle(decimalSeparator, for: UIControlState())
         }
     }
     
-    fileprivate var userIsInTheMiddleOfTyping = false
+    private var userIsInTheMiddleOfTyping = false
     let decimalSeparator = formatter.decimalSeparator ?? "."
     
     @IBOutlet weak var stack0: UIStackView!
@@ -36,7 +36,7 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var rand: UIButton!
     
-    fileprivate lazy var buttonBlank:UIButton = {
+    private lazy var buttonBlank:UIButton = {
         let button = UIButton(frame: CGRect(x: 100, y: 400, width: 100, height: 50))
         button.backgroundColor = UIColor.black
         button.setTitle("", for: UIControlState())
@@ -44,7 +44,7 @@ class ViewController: UIViewController {
     }()
 
        
-    @IBAction fileprivate func touchDigit(_ sender: UIButton) {
+    @IBAction private func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
         if userIsInTheMiddleOfTyping {
             let textCurrentlyInDisplay = display.text!
@@ -63,7 +63,7 @@ class ViewController: UIViewController {
         userIsInTheMiddleOfTyping = true
     }
     
-    fileprivate var displayValue: Double? {
+    private var displayValue: Double? {
         get {
             if let text = display.text,
                 let value = formatter.number(from: text)?.doubleValue {
@@ -84,9 +84,9 @@ class ViewController: UIViewController {
     }
 
     
-    fileprivate var brain = CalculatorBrain()
+    private var brain = CalculatorBrain()
     
-    @IBAction fileprivate func performOperation(_ sender: UIButton) {
+    @IBAction private func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
             if let value = displayValue{
                 brain.setOperand(value)
@@ -141,7 +141,7 @@ class ViewController: UIViewController {
     
     // Код для тестирования "programs"
     
-    fileprivate var savedProgram: CalculatorBrain.PropertyList?
+    private var savedProgram: CalculatorBrain.PropertyList?
     
     @IBAction func setM(_ sender: UIButton) {
         savedProgram = brain.program
@@ -162,7 +162,7 @@ class ViewController: UIViewController {
         configureView(newCollection.verticalSizeClass,buttonBlank:buttonBlank)
     }
     
-    fileprivate func configureView(_ verticalSizeClass: UIUserInterfaceSizeClass, buttonBlank:UIButton) {
+    private func configureView(_ verticalSizeClass: UIUserInterfaceSizeClass, buttonBlank:UIButton) {
         if (verticalSizeClass == .compact)  {
             stack2.addArrangedSubview(plusMinusButton)
             stack3.addArrangedSubview(sin_1)
