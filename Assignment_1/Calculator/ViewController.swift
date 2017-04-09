@@ -10,7 +10,9 @@ import UIKit
 
 class ViewController: UIViewController {
     @IBOutlet weak var history: UILabel!
+    
     @IBOutlet private weak var display: UILabel!
+    
     @IBOutlet weak var tochka: UIButton!{
         didSet {
             tochka.setTitle(decimalSeparator, for: UIControlState())

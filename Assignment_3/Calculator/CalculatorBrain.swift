@@ -70,7 +70,7 @@ class CalculatorBrain{
 
      private var operations : [String: Operation] = [
         "rand": Operation.nullaryOperation(drand48, "rand()"),
-        "π": Operation.constant(M_PI),
+        "π": Operation.constant(Double.pi),
         "e": Operation.constant(M_E),
         "±": Operation.unaryOperation({ -$0 }, { "±(" + $0 + ")"},nil),
         

@@ -91,7 +91,7 @@ class GraphView: UIView {
     
     private var snapshot:UIView?
 /*
-    func scale(gesture: UIPinchGestureRecognizer) {
+    func scale(_ gesture: UIPinchGestureRecognizer) {
         if gesture.state == .Changed {
             scale *= gesture.scale
             gesture.scale = 1.0

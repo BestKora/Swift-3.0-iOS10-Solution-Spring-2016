@@ -72,11 +72,11 @@ class TweetTableViewCell: UITableViewCell
     
     private func setProfileImageView(_ tweet: Tweet) {
         if let profileImageURL = tweet.user.profileImageURL {
+            
             DispatchQueue.global(qos: .userInitiated).async {
                 let contentsOfURL = try? Data(contentsOf: profileImageURL)
                 
                 DispatchQueue.main.async {
-                    
                     if profileImageURL == tweet.user.profileImageURL {
                         if let imageData = contentsOfURL  {
                             self.tweetProfileImageView?.image = UIImage(data: imageData)
@@ -86,6 +86,23 @@ class TweetTableViewCell: UITableViewCell
             }
         }
     }
+    
+    private func setProfileImageView1(_ tweet: Tweet) {
+        if let profileImageURL = tweet.user.profileImageURL {
+            
+            let downloadSession = URLSession (configuration: .ephemeral)
+            
+            let _ = downloadSession.dataTask(with: profileImageURL) { (data, response, error) in
+                if let imageData = data {
+                    DispatchQueue.main.async {
+                        self.tweetProfileImageView?.image = UIImage(data: imageData)
+                    }
+                }
+            }
+            
+        }
+    }
+
 }
 
 // MARK: - Расширение

@@ -157,8 +157,8 @@ class CalculatorViewController: UIViewController, UISplitViewControllerDelegate 
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if let gVC = segue.destination.contentViewController
-                                                           as? GraphViewController, segue.identifier == Storyboard.ShowGraph {
+        if let gVC = segue.destination.contentViewController as? GraphViewController,
+            segue.identifier == Storyboard.ShowGraph {
             prepareGraphVC(gVC)
         }
     }
