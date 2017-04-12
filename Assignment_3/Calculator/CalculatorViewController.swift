@@ -15,6 +15,7 @@ class CalculatorViewController: UIViewController, UISplitViewControllerDelegate 
     @IBOutlet weak var graph: UIButton!{
         didSet{
             graph.isEnabled = false
+            graph.backgroundColor = UIColor.lightGray
         }
     }
     private struct Storyboard{
@@ -46,6 +47,7 @@ class CalculatorViewController: UIViewController, UISplitViewControllerDelegate 
     private var resultValue: (Double, String?) = (0.0, nil) {
         didSet {
             graph.isEnabled = !brain.isPartialResult
+            graph.backgroundColor =  brain.isPartialResult ? UIColor.lightGray : UIColor.white
             switch resultValue {
             case (_, nil) : displayValue = resultValue.0
             case (_, let error):
